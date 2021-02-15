@@ -1,7 +1,6 @@
 const parse = require("csv-parse/lib/sync");
 const fs = require("fs");
 const _ = require("lodash");
-const util = require("util");
 const PNF = require('google-libphonenumber').PhoneNumberFormat;
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const extractEmail = require('extract-email-address').default;
@@ -93,11 +92,11 @@ function sanitizeBoolean(string) {
 
 function mergeByProperty(dataArray, propertyName) {
     return _(dataArray)
-        .groupBy(function(element) {
+        .groupBy((element) => {
             return element[propertyName].toLowerCase();
         })
-        .map(function(group) {
-            return _.mergeWith.apply(_, [{}].concat(group, function(obj, src) {
+        .map((group) => {
+            return _.mergeWith.apply(_, [{}].concat(group, (obj, src) => {
                 if (Array.isArray(obj)) {
                     return _.union(obj, src);
                 }
@@ -108,7 +107,7 @@ function mergeByProperty(dataArray, propertyName) {
 }
 
 function sanitizeOutput(output) {
-    _.map(output, function(element) {
+    _.map(output, (element) => {
         element.invisible = sanitizeBoolean(element.invisible);
         element.see_all = sanitizeBoolean(element.see_all);
     
@@ -119,7 +118,7 @@ function sanitizeOutput(output) {
 }
 
 function getPropByMatch(arrayObj, propMatch) {
-    return _.pickBy(arrayObj, function(value, key) {
+    return _.pickBy(arrayObj, (value, key) => {
         return _.startsWith(key, propMatch);
     });
 }
@@ -127,8 +126,8 @@ function getPropByMatch(arrayObj, propMatch) {
 function transformToAddress(arrayOfMatches) {
     let arrayToReturn = [];
     const regex = new RegExp('([\\w]+)');
-    _.map(arrayOfMatches, function(value, key) {
-        let object = {}
+    _.map(arrayOfMatches, (value, key) => {
+        let object = {};
         let data = key.split(' ');
         _.chain(object)
             .assign({
@@ -145,7 +144,7 @@ function transformToAddress(arrayOfMatches) {
         arrayToReturn.push(object);
     })
 
-    return arrayToReturn
+    return arrayToReturn;
 
 }
 
@@ -154,24 +153,24 @@ function isValidAddress(element) {
     if (element.type == 'phone') {
         try {
             const number = phoneUtil.parseAndKeepRawInput(element.address, 'BR');
-            return phoneUtil.isValidNumberForRegion(number, 'BR')
+            return phoneUtil.isValidNumberForRegion(number, 'BR');
         } catch (error) {
             return false;
         }
 
     } else if (element.type == 'email') {
-        return element.address != ''
+        return element.address != '';
     }
 }
 
 function removeInvalidAddresses(addressesArray) {
-    _.remove(addressesArray, function(address) {
-        return !isValidAddress(address)
+    _.remove(addressesArray, (address) => {
+        return !isValidAddress(address);
     })
 }
 
 function sanitizeAddressesPhone(addressesArray) {
-    _.map(addressesArray, function(address) {
+    _.map(addressesArray, (address) => {
         if (address.type == 'phone') {
             const number = (phoneUtil.format(phoneUtil.parseAndKeepRawInput(address.address, 'BR'), PNF.E164)).replace('+', '');
             address.address = number;
@@ -183,19 +182,19 @@ function returnSanitizeAdrressesEmail(addresses) {
     return _.reduce(addresses, (acc, val) => {
         if (val.type == 'email') {
             let emails = val.address.split('/');
-            let arr = []
+            let arr = [];
             emails.forEach(email => {
                 emailString = extractEmail(email).length > 0 ? extractEmail(email)[0].email : '';
                 arr.push({
                     ...val,
                     address: emailString
-                })
+                });
             });
-            return acc.concat(arr)
+            return acc.concat(arr);
         } else {
-            return acc.concat(val)
+            return acc.concat(val);
         };
-    }, [])
+    }, []);
 }
 
 function saveToFile(output) {
@@ -205,7 +204,7 @@ function saveToFile(output) {
         if (err) {
             throw err;
         }
-        console.log("JSON data is saved.");
+        console.log("JSON data is saved to output.json .");
     });
 
 }
